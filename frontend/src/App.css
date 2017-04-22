@@ -20,4 +20,5 @@
 
 .app__half-hight {
   height: 50%;
+  overflow: auto;
 }

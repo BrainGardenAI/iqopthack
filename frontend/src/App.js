@@ -1,13 +1,68 @@
 import React, { Component } from 'react';
 import './App.css';
+import { forEach, forOwn, get, isArray, set } from 'lodash';
+
+import { GraphService } from './services';
 
 import Tree from './blocks/Tree';
 import TreeHealth from './blocks/TreeHealth';
 import { HAIKU } from './const';
 
-console.log(HAIKU);
-
 class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      graphRoot: {},
+    };
+
+    this.load();
+  }
+
+  collectIds(node) {
+    let ids = [node.id];
+
+    if (isArray(node.children)) {
+      forEach(node.children, (item) => {
+        ids = ids.concat(this.collectIds(item));
+      });
+    }
+
+    return ids;
+  }
+
+  load() {
+    GraphService.getRoot()
+      .then((result) => {
+        let nodeIds = this.collectIds(result);
+        nodeIds.shift(); // skip first root id
+
+        GraphService.getItems(nodeIds)
+          .then((result2) => {
+            let nodesFlatHash = {};
+
+            forEach(nodeIds, (id, index) => {
+              set(nodesFlatHash, id, result2[index]);
+            });
+
+            this.setState({ graphRoot: this.prepareGraph(result, nodesFlatHash) });
+          });
+      });
+  }
+
+  prepareNode(node, nodesFlatHash) {
+    const { children, id } = { ...node };
+    return {
+      name: id,
+      children,
+      properties: get(nodesFlatHash, id, {}),
+    };
+  }
+
+  prepareGraph(nodes) {
+    return forOwn(nodes, (node) => this.prepareNode(node));
+  }
+
   render() {
     return (
       <div className="app">
@@ -36,6 +91,7 @@ class App extends Component {
             </div>
             <div className="app__half-hight">
               Node info
+              <pre>{JSON.stringify(this.state.graphRoot, null, 4)}</pre>
             </div>
           </div>
         </div>
