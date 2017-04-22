@@ -1,0 +1,18 @@
+.app {
+  height: 100%;
+  display: flex;
+}
+
+.app__left {
+  width: 65%;
+}
+.app__right {
+  width: 35%;
+}
+.app__left, .app__right {
+  height: 100%;
+}
+
+.app__half-hight {
+  height: 50%;
+}

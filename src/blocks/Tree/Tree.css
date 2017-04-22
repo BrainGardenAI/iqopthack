@@ -1,0 +1,22 @@
+.tree {
+    height: 100%;
+    min-height: 100%;
+
+    background-color: #efefef;
+}
+
+.tree__circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+.tree__text {
+  font: 12px sans-serif;
+}
+
+.tree__link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
