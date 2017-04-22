@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-
+import { get } from 'lodash';
 import * as d3 from 'd3';
 
 import './Tree.css';
@@ -18,6 +18,14 @@ class Tree extends Component {
     
     treeData = {
         name: 'Top level',
+        properties: {
+            global_perc: 0,
+            parent_perc: 0,
+            current_value: 0,
+            day_profit: 0,
+            week_profit: 0,
+            month_profit: 0,
+        },
         children: [
             {
                 name: 'Level 2: A',
@@ -98,7 +106,7 @@ class Tree extends Component {
         let nodes = treeData.descendants(),
             links = treeData.descendants().slice(1);
 
-        nodes.forEach((d) => { d.y = this.width - d.depth * 180 });
+        nodes.forEach((d) => { d.y = this.width - d.depth * 80 });
 
         /******* Nodes section *******/
         let node = this.svg.selectAll('g.tree__node')

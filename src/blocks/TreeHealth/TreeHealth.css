@@ -1,0 +1,7 @@
+.tree-health {
+    height: 100%;
+    width: auto;
+    background: url('./TreeHealth.jpg') top center no-repeat;
+    
+    background-size: 80% auto;
+}
