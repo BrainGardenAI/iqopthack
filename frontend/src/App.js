@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
+import './css/bootstrap.css';
 import { forEach, forOwn, get, isArray, map, set } from 'lodash';
 
 import { GraphService } from './services';
