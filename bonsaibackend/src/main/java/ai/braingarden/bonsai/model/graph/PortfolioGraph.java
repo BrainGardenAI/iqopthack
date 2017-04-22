@@ -1,9 +1,15 @@
 package ai.braingarden.bonsai.model.graph;
 
+import ai.braingarden.bonsai.utils.AsyncPersistenceManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.io.Serializable;
 import java.util.*;
 
 
-public class PortfolioGraph {
+public class PortfolioGraph implements Serializable {
 
     private PortfolioNode root;
 
@@ -19,6 +25,7 @@ public class PortfolioGraph {
         return items.get(id);
     }
 
+
     /**
      * @param nodeId
      * @param depth copyt depth, starts from 1
@@ -32,12 +39,12 @@ public class PortfolioGraph {
             throw new RuntimeException("Node " + nodeId + " was not found");
         PortfolioNode n = nodes.get(nodeId).copyEmpty();
 
-        Map<PortfolioNode, List<PortfolioNode>> childrens = new HashMap<>();
+        Map<PortfolioNode, Set<PortfolioNode>> childrens = new HashMap<>();
         childrens.put(n, nodes.get(nodeId).getChildren());
         for ( int i = 0; i < depth; i++ ) {
-            Map<PortfolioNode, List<PortfolioNode>> newChildrens = new HashMap<>();
+            Map<PortfolioNode, Set<PortfolioNode>> newChildrens = new HashMap<>();
 
-            for(Map.Entry<PortfolioNode, List<PortfolioNode>> parent : childrens.entrySet()) {
+            for(Map.Entry<PortfolioNode, Set<PortfolioNode>> parent : childrens.entrySet()) {
                 for(PortfolioNode pn : parent.getValue()) {
                     PortfolioNode childCopy = pn.copyEmpty();
                     parent.getKey().getChildren().add(childCopy);
@@ -52,16 +59,30 @@ public class PortfolioGraph {
     }
 
     public PortfolioNode getRoot() {
+        if(root == null)
+            return null;
         return getForDepth(root.getId(), 2);
     }
 
-    public void putNode(PortfolioNode np) {
+    public void putNode(PortfolioNode np, String parentId) {
+
+        if(parentId == null)
+            this.root = np;
+
+        if(parentId != null) {
+            PortfolioNode parent = nodes.get(parentId);
+            if(parent == null)
+                throw new IllegalArgumentException("There is no node " + parentId);
+            parent.getChildren().add(np);
+        }
+
         ids.add(np.getId());
+
         if ( !items.containsKey(np.getId()) )
             items.put(np.getId(), new PortfolioItem(np.getId()));
         nodes.put(np.getId(), np);
         for(PortfolioNode c : np.getChildren())
-            putNode(c);
+            putNode(c, np.getId());
     }
 
     public boolean deleteNode(String id) {
@@ -81,5 +102,12 @@ public class PortfolioGraph {
             throw new IllegalArgumentException("Graph has no node " + item.getId());
         items.put(item.getId(), item);
     }
+
+
+    //------------------------------------------------------------------------------------------
+
+
+
+
 
 }

@@ -1,9 +1,11 @@
 package ai.braingarden.bonsai.model.graph;
 
+import java.io.Serializable;
+
 /**
  * Created by veter on 22.04.17.
  */
-public class PortfolioItem {
+public class PortfolioItem implements Serializable {
 
     private String id;
     private double global_perc;

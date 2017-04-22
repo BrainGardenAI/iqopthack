@@ -1,14 +1,17 @@
 package ai.braingarden.bonsai.model.graph;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
-public class PortfolioNode {
+public class PortfolioNode implements Serializable {
 
     private String id;
 
-    private List<PortfolioNode> children = new ArrayList<>();
+    private Set<PortfolioNode> children = new HashSet<>();
 
     public String getId() {
         return id;
@@ -18,7 +21,7 @@ public class PortfolioNode {
         this.id = id;
     }
 
-    public List<PortfolioNode> getChildren() {
+    public Set<PortfolioNode> getChildren() {
         return children;
     }
 
