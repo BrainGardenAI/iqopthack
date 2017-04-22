@@ -184,6 +184,10 @@ class Tree extends Component {
             d._children = null;
         }
 
+        if (this.props.onNodeClick && typeof this.props.onNodeClick === 'function') {
+            this.props.onNodeClick(d);
+        }
+
         this.update(d);
     }
     

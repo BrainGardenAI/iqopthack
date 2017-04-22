@@ -6,6 +6,7 @@ import { GraphService } from './services';
 
 import Tree from './blocks/Tree';
 import TreeHealth from './blocks/TreeHealth';
+import Details from './blocks/Details';
 import { HAIKU } from './const';
 
 class App extends Component {
@@ -14,7 +15,10 @@ class App extends Component {
 
     this.state = {
       graphRoot: {},
+      selectedNodePath: '',
     };
+
+    this.onNodeClick = this.onNodeClick.bind(this);
 
     this.load();
   }
@@ -42,7 +46,15 @@ class App extends Component {
             let nodesFlatHash = {};
 
             forEach(nodeIds, (id, index) => {
-              set(nodesFlatHash, id, result2[index]);
+              const { current_value, day_profit, week_profit, month_profit, global_perc, local_perc } = result2[index];
+              set(nodesFlatHash, id, {
+                current_value,
+                day_profit,
+                week_profit,
+                month_profit,
+                global_perc,
+                local_perc,
+              });
             });
 
             this.setState({ graphRoot: this.prepareNode(result, nodesFlatHash) });
@@ -56,10 +68,16 @@ class App extends Component {
     return {
       name: id,
       children: isArray(children)
-        ? map(children, (item) => this.prepareNode(item))
+        ? map(children, (item, index) => {
+          return this.prepareNode(item, nodesFlatHash);
+        })
         : [],
       properties: get(nodesFlatHash, id, {}),
     };
+  }
+
+  onNodeClick(node) {
+    console.log('onNodeClick', { node });
   }
 
   render() {
@@ -74,14 +92,17 @@ class App extends Component {
               {HAIKU.SPRING}
             </div>
             <div className="app__half-hight">
-              Node info
+              <Details />
               <p><a href="#second-screen">go down</a></p>
             </div>
           </div>
         </div>
         <div id="second-screen" className="app__row">
           <div className="app__left">
-            <Tree treeData={this.state.graphRoot} />
+            <Tree
+              treeData={this.state.graphRoot}
+              onNodeClick={this.onNodeClick}
+            />
           </div>
           <div className="app__right">
             <div className="app__half-hight">
