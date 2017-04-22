@@ -41,12 +41,7 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.arangodb</groupId>
-            <artifactId>arangodb-java-driver</artifactId>
-            <version>4.1.0</version>
-        </dependency>
+        </dependency>>
 
         <dependency>
             <groupId>io.fastjson</groupId>

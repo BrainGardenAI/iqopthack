@@ -1,9 +1,6 @@
 package ai.braingarden.bonsai.model.graph;
 
-import ai.braingarden.bonsai.utils.AsyncPersistenceManager;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.Serializable;
 import java.util.*;
@@ -37,25 +34,9 @@ public class PortfolioGraph implements Serializable {
 
         if ( !ids.contains(nodeId) )
             throw new RuntimeException("Node " + nodeId + " was not found");
-        PortfolioNode n = nodes.get(nodeId).copyEmpty();
 
-        Map<PortfolioNode, Set<PortfolioNode>> childrens = new HashMap<>();
-        childrens.put(n, nodes.get(nodeId).getChildren());
-        for ( int i = 0; i < depth; i++ ) {
-            Map<PortfolioNode, Set<PortfolioNode>> newChildrens = new HashMap<>();
-
-            for(Map.Entry<PortfolioNode, Set<PortfolioNode>> parent : childrens.entrySet()) {
-                for(PortfolioNode pn : parent.getValue()) {
-                    PortfolioNode childCopy = pn.copyEmpty();
-                    parent.getKey().getChildren().add(childCopy);
-                    newChildrens.put(childCopy, pn.getChildren());
-                }
-            }
-
-            childrens = newChildrens;
-        }
-
-        return n;
+        PortfolioNode n = nodes.get(nodeId);
+        return n.copyDepth(depth);
     }
 
     public PortfolioNode getRoot() {
@@ -65,6 +46,8 @@ public class PortfolioGraph implements Serializable {
     }
 
     public void putNode(PortfolioNode np, String parentId) {
+        if(parentId == null && root != null)
+            throw new IllegalStateException("Root exists, delete it before adding new one");
 
         if(parentId == null)
             this.root = np;
@@ -73,16 +56,27 @@ public class PortfolioGraph implements Serializable {
             PortfolioNode parent = nodes.get(parentId);
             if(parent == null)
                 throw new IllegalArgumentException("There is no node " + parentId);
-            parent.getChildren().add(np);
+            parent.addChild(np);
         }
 
         ids.add(np.getId());
 
+        //put default item
         if ( !items.containsKey(np.getId()) )
             items.put(np.getId(), new PortfolioItem(np.getId()));
+
+        //put node intself in the registry
         nodes.put(np.getId(), np);
+
+        //add recursively all its children
         for(PortfolioNode c : np.getChildren())
             putNode(c, np.getId());
+    }
+
+    public void deleteRoot() {
+        ids.clear();
+        items.clear();
+        nodes.clear();
     }
 
     public boolean deleteNode(String id) {
@@ -90,6 +84,10 @@ public class PortfolioGraph implements Serializable {
             ids.remove(id);
             PortfolioNode node = nodes.remove(id);
                                  items.remove(id);
+            PortfolioNode parent = nodes.get(node.getId());
+            if ( parent != null )
+                parent.removeChild(node);
+
             for(PortfolioNode c : node.getChildren())
                 deleteNode(c.getId());
             return true;
@@ -103,6 +101,32 @@ public class PortfolioGraph implements Serializable {
         items.put(item.getId(), item);
     }
 
+    public List<PortfolioNode> getLeafsOf(String nodeId) {
+        if(!ids.contains(nodeId))
+            throw new IllegalArgumentException("Graph doesn't contain node " + nodeId);
+
+        PortfolioNode node = nodes.get(nodeId);
+        List<PortfolioNode> leafs = new ArrayList<>();
+
+        if(node.isLeaf()) {
+            leafs.add(node);
+            return leafs;
+        }
+
+        List<PortfolioNode> children = Arrays.asList(node);
+        while(!children.isEmpty()) {
+            List<PortfolioNode> newChildren = new ArrayList<>();
+            for(PortfolioNode pn : children) {
+                for(PortfolioNode ch : pn.getChildren())
+                    if ( ch.isLeaf() )
+                        leafs.add(ch);
+                    else
+                        newChildren.add(ch);
+            }
+            children = newChildren;
+        }
+        return leafs;
+    }
 
     //------------------------------------------------------------------------------------------
 

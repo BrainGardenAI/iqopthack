@@ -33,7 +33,12 @@ public class GraphRest {
         return graphService.getGraph().getItem(id);
     }
 
-    @PostMapping("/graph/items")
+    @GetMapping("/graph/leafs/{id}")
+    public @ResponseBody List<PortfolioNode> getLeafs(@PathVariable String id) {
+        return graphService.getGraph().getLeafsOf(id);
+    }
+
+    @PostMapping("/graph/get-items")
     public @ResponseBody List<PortfolioItem> getItems(@RequestBody List<String> ids) {
         return ids.stream().map( graphService.getGraph()::getItem ).collect(Collectors.toList());
     }
@@ -44,15 +49,30 @@ public class GraphRest {
         graphService.saveGraphAsync();
     }
 
+
     @PostMapping("/graph/root")
     public void putRoot(@RequestBody PortfolioNode node) {
         graphService.getGraph().putNode(node, null);
         graphService.saveGraphAsync();
     }
 
+    @DeleteMapping("/graph/root")
+    public void deleteRoot() {
+        graphService.getGraph().deleteRoot();
+        graphService.saveGraphAsync();
+    }
+
     @PostMapping("/graph/item")
     public void putItem(@RequestBody PortfolioItem item) {
         graphService.getGraph().putItem(item);
+        graphService.saveGraphAsync();
+    }
+
+    @PostMapping("/graph/items")
+    public void putItems(@RequestBody List<PortfolioItem> items) {
+        for(PortfolioItem pi : items)
+            graphService.getGraph().putItem(pi);
+        graphService.saveGraphAsync();
     }
 
     @DeleteMapping("/graph/node/{id}")
