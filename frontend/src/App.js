@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { forEach, forOwn, get, isArray, set } from 'lodash';
+import { forEach, forOwn, get, isArray, map, set } from 'lodash';
 
 import { GraphService } from './services';
 
@@ -45,22 +45,21 @@ class App extends Component {
               set(nodesFlatHash, id, result2[index]);
             });
 
-            this.setState({ graphRoot: this.prepareGraph(result, nodesFlatHash) });
+            this.setState({ graphRoot: this.prepareNode(result, nodesFlatHash) });
           });
       });
   }
 
   prepareNode(node, nodesFlatHash) {
     const { children, id } = { ...node };
+
     return {
       name: id,
-      children,
+      children: isArray(children)
+        ? map(children, (item) => this.prepareNode(item))
+        : [],
       properties: get(nodesFlatHash, id, {}),
     };
-  }
-
-  prepareGraph(nodes) {
-    return forOwn(nodes, (node) => this.prepareNode(node));
   }
 
   render() {
@@ -82,7 +81,7 @@ class App extends Component {
         </div>
         <div id="second-screen" className="app__row">
           <div className="app__left">
-            <Tree />
+            <Tree treeData={this.state.graphRoot} />
           </div>
           <div className="app__right">
             <div className="app__half-hight">

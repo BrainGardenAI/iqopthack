@@ -15,57 +15,13 @@ class Tree extends Component {
     root;
     ref;
     i = 0;
-    
-    treeData = {
-        name: 'Top level',
-        properties: {
-            global_perc: 0,
-            parent_perc: 0,
-            current_value: 0,
-            day_profit: 0,
-            week_profit: 0,
-            month_profit: 0,
-        },
-        children: [
-            {
-                name: 'Level 2: A',
-                children: [
-                    {
-                        name: 'Son Level 2: A',
-                        children: [
-                            {
-                                name: 'Son Son Level 2: A',
-                                children: [
-                                    {
-                                        name: 'Son Son Son Level 2: A',
-                                        children: [
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        name: 'Daughter Level 2: A'
-                    }
-                ]
-            },
-            {
-                name: 'Level 2: B'
-            }
-        ]
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            treeData: {},
+        };
     }
     
     componentDidMount() {
@@ -81,15 +37,27 @@ class Tree extends Component {
             .attr('transform', `translate(${0}, ${-230})`);
 
         this.treeMap = d3.tree().size([this.width, this.height]);
-        
+
+        this.init()
+    }
+
+    init() {
         // Assigns parent, children, height, depth
-        this.root = d3.hierarchy(this.treeData, (d) => d.children);
+        this.root = d3.hierarchy(this.state.treeData, (d) => d.children);
         this.root.x0 = 0;
         this.root.y0 = 0;
 
-        this.root.children.forEach((item) => this.collapse(item));
+        if (this.root && this.root.children) {
+            this.root.children.forEach((item) => this.collapse(item));
+        }
 
         this.update(this.root);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState({ treeData: get(nextProps, 'treeData', {}) }, () => {
+            this.init();
+        });
     }
     
     collapse(d) {
@@ -106,7 +74,7 @@ class Tree extends Component {
         let nodes = treeData.descendants(),
             links = treeData.descendants().slice(1);
 
-        nodes.forEach((d) => { d.y = this.width - d.depth * 80 });
+        nodes.forEach((d) => { d.y = this.width - d.depth * 120 });
 
         /******* Nodes section *******/
         let node = this.svg.selectAll('g.tree__node')
