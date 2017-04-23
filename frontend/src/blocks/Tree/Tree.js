@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { get } from 'lodash';
+import { forEach, forOwn, get, isArray, isEqual } from 'lodash';
 import * as d3 from 'd3';
 
 import './Tree.css';
@@ -13,6 +13,7 @@ class Tree extends Component {
     svg;
     treeMap;
     root;
+    selectedNode;
     ref;
     i = 0;
 
@@ -38,7 +39,8 @@ class Tree extends Component {
 
         this.treeMap = d3.tree().size([this.width, this.height]);
 
-        this.init()
+        this.init();
+        this.update(this.root);
     }
 
     init() {
@@ -50,14 +52,21 @@ class Tree extends Component {
         if (this.root && this.root.children) {
             this.root.children.forEach((item) => this.collapse(item));
         }
-
-        this.update(this.root);
     }
 
     componentWillReceiveProps(nextProps) {
-        this.setState({ treeData: get(nextProps, 'treeData', {}) }, () => {
-            this.init();
-        });
+        if (!isEqual(this.props, nextProps)) {
+            this.setState({
+                treeData: get(nextProps, 'treeData', {}),
+            }, () => {
+                this.init();
+                this.update(this.root);
+
+                if (!this.selectedNode) {
+                    this.selectNode(this.root);
+                }
+            });
+        }
     }
     
     collapse(d) {
@@ -66,6 +75,13 @@ class Tree extends Component {
             d._children.forEach((item) => this.collapse(item));
             d.children = null;
         }
+    }
+
+    getCircleClass(d) {
+        return (d._selected
+            ? ['tree__circle', 'tree__circle_selected']
+            : ['tree__circle'])
+                .join(' ');
     }
 
     update(source) {
@@ -85,20 +101,24 @@ class Tree extends Component {
                 .append('g')
                 .attr('transform', (d) => `translate(${source.x0},${source.y0})`)
                 .attr('class', 'tree__node')
+                .on('dblclick', (d) => {
+                    this.toggleNode(d);
+                })
                 .on('click', (d) => {
-                    this.click(d);
+                    this.selectNode(d);
                 });
 
         // add circles
         nodeEnter
             .append('circle')
-            .attr('class', 'tree__circle')
+            .attr('class', (d) => this.getCircleClass(d))
             .attr('r', 1e-6)
             .style('fill', (d) => d._children ? 'lightsteelblue' : '#fff');
 
         // add labels
         nodeEnter
             .append('text')
+            .attr('class', 'tree__text')
             .attr('dy', '.35em')
             .attr('x', (d) => d.children || d._children ? -13 : 13)
             .attr('text-anchor', (d) => d.children || d._children ? 'end' : 'start')
@@ -113,8 +133,10 @@ class Tree extends Component {
 
         nodeUpdate
             .select('.tree__circle')
+            .attr('class', null)
+            .attr('class', (d) => this.getCircleClass(d))
             .attr('r', 10)
-            .style('fill', (d) => d._children ? 'lightsteelblue' : '#fff')
+            .style('fill', (d) => get(d, 'data.leaf') ? '#fff' : 'lightsteelblue')
             .attr('cursor', 'pointer');
 
         let nodeExit = node
@@ -174,7 +196,7 @@ class Tree extends Component {
               ${d.x} ${d.y}`;
     }
 
-    click(d) {
+    toggleNode(d) {
         if (d.children) {
             d._children = d.children;
             d.children = null;
@@ -182,11 +204,41 @@ class Tree extends Component {
         else {
             d.children = d._children;
             d._children = null;
+
+            if ((!d.children || d.children.length === 0) && d.data.leaf === false) {
+                if (this.props.onLoadAtNode && typeof this.props.onLoadAtNode === 'function') {
+                    this.props.onLoadAtNode(d);
+                }
+            }
         }
 
-        if (this.props.onNodeClick && typeof this.props.onNodeClick === 'function') {
-            this.props.onNodeClick(d);
+        this.update(d);
+    }
+
+    deselectOtherNodes(current, selected) {
+        let children = current.children || current._children;
+
+        current._selected = get(current, 'data.id') === get(selected, 'data.id');
+
+        if (isArray(children)) {
+            forEach(children, (item) => {
+                this.deselectOtherNodes(item, selected);
+            })
         }
+    }
+
+    selectNode(d) {
+        if (!d._selected) {
+            d._selected = true;
+
+            if (this.props.onNodeClick && typeof this.props.onNodeClick === 'function') {
+                this.props.onNodeClick(d);
+            }
+
+            this.selectedNode = d;
+        }
+
+        this.deselectOtherNodes(this.treeMap(this.root), d);
 
         this.update(d);
     }

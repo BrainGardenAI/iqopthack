@@ -16,10 +16,11 @@ class App extends Component {
 
     this.state = {
       graphRoot: {},
-      selectedNodePath: '',
+      selectedNode: null,
     };
 
     this.onNodeClick = this.onNodeClick.bind(this);
+    this.onLoadAtNode = this.onLoadAtNode.bind(this);
 
     this.load();
   }
@@ -40,7 +41,6 @@ class App extends Component {
     GraphService.getRoot()
       .then((result) => {
         let nodeIds = this.collectIds(result);
-        nodeIds.shift(); // skip first root id
 
         GraphService.getItems(nodeIds)
           .then((result2) => {
@@ -64,10 +64,11 @@ class App extends Component {
   }
 
   prepareNode(node, nodesFlatHash) {
-    const { children, id } = { ...node };
+    const { children, id, leaf } = { ...node };
 
     return {
       id,
+      leaf,
       name: id,
       children: isArray(children)
         ? map(children, (item, index) => {
@@ -79,7 +80,19 @@ class App extends Component {
   }
 
   onNodeClick(node) {
-    console.log('onNodeClick', { node, graphRoot: this.state.graphRoot });
+    this.setState({ selectedNode: get(node, 'data', null) });
+  }
+
+  onLoadAtNode(node) {
+    console.log('onLoadAtNode(); node=', node);
+  }
+
+  get rootNodeProps() {
+    return get(this.state, 'graphRoot.properties');
+  }
+
+  get selectedNodeProps() {
+    return get(this.state, 'selectedNode.properties', this.rootNodeProps);
   }
 
   render() {
@@ -91,7 +104,7 @@ class App extends Component {
           </div>
           <div className="app__right">
             <div className="app__half-hight">
-              <div style={{ padding: '5px' }}>
+              <div style={{ padding: '5px 0' }}>
                 <div className="btn-group">
                   <span className="btn btn-default active">light</span>
                   <a href="#second-screen" className="btn btn-default">pro</a>
@@ -100,7 +113,10 @@ class App extends Component {
               {HAIKU.SPRING}
             </div>
             <div className="app__half-hight">
-              <Details />
+              <Details
+                rootNodeProps={this.rootNodeProps}
+                selectedNodeProps={this.selectedNodeProps}
+              />
             </div>
           </div>
         </div>
@@ -109,11 +125,12 @@ class App extends Component {
             <Tree
               treeData={this.state.graphRoot}
               onNodeClick={this.onNodeClick}
+              onLoadAtNode={this.onLoadAtNode}
             />
           </div>
           <div className="app__right">
             <div className="app__half-hight">
-              <div style={{ padding: '5px' }}>
+              <div style={{ padding: '5px 0' }}>
                 <div className="btn-group">
                   <a href="#first-screen" className="btn btn-default">light</a>
                   <span className="btn btn-default active">pro</span>
@@ -121,8 +138,10 @@ class App extends Component {
               </div>
             </div>
             <div className="app__half-hight">
-              Node info
-              <pre>{JSON.stringify(this.state.graphRoot, null, 4)}</pre>
+              <Details
+                rootNodeProps={this.rootNodeProps}
+                selectedNodeProps={this.selectedNodeProps}
+              />
             </div>
           </div>
         </div>

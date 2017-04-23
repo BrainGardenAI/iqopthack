@@ -1,8 +1,6 @@
 .tree {
     height: 100%;
     min-height: 100%;
-
-    background-color: #efefef;
 }
 
 .tree__circle {
@@ -11,8 +9,18 @@
   stroke-width: 3px;
 }
 
+.tree__circle_selected {
+  stroke: green;
+  stroke-width: 10px;
+  stroke-dasharray: 10px 5px;
+}
+
 .tree__text {
   font: 12px sans-serif;
+  user-select: none;
+}
+.tree__text:selection {
+  background-color: none;
 }
 
 .tree__link {
