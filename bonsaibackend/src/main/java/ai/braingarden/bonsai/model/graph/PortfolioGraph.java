@@ -77,6 +77,7 @@ public class PortfolioGraph implements Serializable {
         ids.clear();
         items.clear();
         nodes.clear();
+        root = null;
     }
 
     public boolean deleteNode(String id) {

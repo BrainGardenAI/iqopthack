@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MyTree</title>
+    <script src="./tree.js" type='text/javascript'></script>
+</head>
+<body>
+    <button onclick="doit()">Push Me</button>
+
+    <canvas id="canvas"></canvas>
+
+
+    <script type='text/javascript'>
+        function doit() {
+            console.log('drawing');
+            var canvas = document.getElementById("canvas");
+            canvas.height = 700;
+            canvas.width  = 600;
+            var ctx = canvas.getContext("2d");
+            tree.canvas = canvas;
+            tree.ctx = ctx;
+            var counter = 0;
+            setInterval(function() {
+                counter++;
+
+                tree.angleRandomVal =
+                    Math.PI / 32 * Math.sin(Math.PI / 32 * counter) +
+                    Math.PI / 64 * Math.cos(Math.PI / 32 * counter) +
+                    Math.PI / 64 * Math.sin(Math.PI / 128 * counter);
+                var length = Math.min(60, 5 + counter*0.2);
+
+//                tree.maxBranches = 4 + Math.min(1000000, Math.floor(Math.pow(0.3 * counter, 3)));
+//                console.log(tree.maxBranches);
+                tree.drawTree(
+                    { x: canvas.width / 2, y: canvas.height },  //start point
+                    { x: 0, y: length },
+                    8
+                )
+
+            }, 80);
+        }
+
+    </script>
+</body>
+</html>
