@@ -6,6 +6,8 @@ import * as _ from 'lodash';
 
 import { GraphService } from './services';
 
+import * as SVG from './svg';
+
 import Tree from './blocks/Tree';
 import TreeHealth from './blocks/TreeHealth';
 import Details from './blocks/Details';
@@ -176,6 +178,20 @@ class App extends Component {
     }
   }
 
+  getSeasonSvg(rootDayProfit) {
+    if (rootDayProfit <= (- 5 / 256)) {
+      return SVG.Winter;
+    } else if ((- 5 / 256) <= rootDayProfit < (1 / 256)) {
+      return SVG.Fall;
+    } else if ((1 / 256) <= rootDayProfit < (15 / 256)) {
+      return SVG.Spring;
+    } else if ((15 / 256) <= rootDayProfit) {
+      return SVG.Summer;
+    } else {
+      return null;
+    }
+  }
+
   get rootNode() {
     return get(this.state, 'graphRoot');
   }
@@ -187,11 +203,14 @@ class App extends Component {
   render() {
     return (
       <div className="app">
-        <div id="first-screen" className="app__row">
+        <div id="first-screen" className="app__row" style={{ position: 'relative' }}>
           <div className="app__left">
-            <TreeHealth />
+            <img
+              src={this.getSeasonSvg(get(this.rootNode, 'properties.day_profit'))}
+              style={{ position: 'absolute', zIndex: '1' }}
+            />
           </div>
-          <div className="app__right">
+          <div className="app__right" style={{ zIndex: '2' }}>
             <div className="app__half-hight">
               <div style={{ padding: '5px 0' }}>
                 <div className="btn-group">
@@ -199,9 +218,10 @@ class App extends Component {
                   <a href="#second-screen" className="btn btn-default">pro</a>
                 </div>
               </div>
-              {HAIKU.SPRING}
+              123
             </div>
             <div className="app__half-hight">
+              321
             </div>
           </div>
         </div>
