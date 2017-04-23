@@ -6,18 +6,19 @@ import fakeItems from './fake-get-items.json';
 
 class GraphService extends BaseService {
     static getRoot() {
-        return new Promise((resolve, reject) => {
-            // resolve(fakeRootData);
-            API.Graph.getRoot()
-                .then(this.chekcStatus)
-                .then(this.parseJSON)
-                .then((result) => {
-                    resolve(result);
-                })
-                .catch((error) => {
-                    reject(error);
-                });
-        });
+        return this.getForDepth('root', 5);
+        // return new Promise((resolve, reject) => {
+        //     // resolve(fakeRootData);
+        //     API.Graph.getRoot()
+        //         .then(this.chekcStatus)
+        //         .then(this.parseJSON)
+        //         .then((result) => {
+        //             resolve(result);
+        //         })
+        //         .catch((error) => {
+        //             reject(error);
+        //         });
+        // });
     }
 
     static getItems(ids) {
