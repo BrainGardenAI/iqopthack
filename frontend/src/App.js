@@ -176,12 +176,12 @@ class App extends Component {
     }
   }
 
-  get rootNodeProps() {
-    return get(this.state, 'graphRoot.properties');
+  get rootNode() {
+    return get(this.state, 'graphRoot');
   }
 
-  get selectedNodeProps() {
-    return get(this.state, 'selectedNode.properties', this.rootNodeProps);
+  get selectedNode() {
+    return get(this.state, 'selectedNode', this.rootNode);
   }
 
   render() {
@@ -202,13 +202,6 @@ class App extends Component {
               {HAIKU.SPRING}
             </div>
             <div className="app__half-hight">
-              <Details
-                rootNodeProps={this.rootNodeProps}
-                selectedNodeProps={this.selectedNodeProps}
-              />
-              <pre>
-                {JSON.stringify(this.state.graphRoot, null, 4)}
-              </pre>
             </div>
           </div>
         </div>
@@ -227,13 +220,13 @@ class App extends Component {
                   <a href="#first-screen" className="btn btn-default">light</a>
                   <span className="btn btn-default active">pro</span>
                 </div>
+                <Details
+                  rootNode={this.rootNode}
+                  selectedNode={this.selectedNode}
+                />
               </div>
             </div>
             <div className="app__half-hight">
-              <Details
-                rootNodeProps={this.rootNodeProps}
-                selectedNodeProps={this.selectedNodeProps}
-              />
             </div>
           </div>
         </div>

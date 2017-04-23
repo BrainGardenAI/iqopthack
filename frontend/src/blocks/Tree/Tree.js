@@ -68,8 +68,8 @@ class Tree extends Component {
                 this.init();
                 this.update(this.root);
 
-                if (this.selectedNode) {
-                    this.selectNode(this.selectedNode);
+                if (!this.selectedNode) {
+                    this.selectNode(this.root);
                 }
             });
         }

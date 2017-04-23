@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { get } from 'lodash';
+import { get, round } from 'lodash';
 
 const defaults = {
     current_value: null,
@@ -16,40 +16,45 @@ class Details extends Component {
         super(props);
 
         this.state = {
-            deposit: 10000,
-            rootNodeProps: { ...defaults },
-            selectedNodeProps: { ...defaults },
+            deposit: '0',
+            rootNode: { ...defaults },
+            selectedNode: { ...defaults },
         };
     }
 
     componentWillReceiveProps(nextProps) {
         this.setState({
-            rootNodeProps: get(nextProps, 'rootNodeProps', { ...defaults }),
-            selectedNodeProps: get(nextProps, 'selectedNodeProps', { ...defaults }),
+            rootNode: get(nextProps, 'rootNode', { ...defaults }),
+            selectedNode: get(nextProps, 'selectedNode', { ...defaults }),
         });
+    }
+
+    getRound(number) {
+        return round(number, 2);
     }
 
     render() {
         return (
-            <div>
+            <div style={{ padding: '0 10px' }}>
                 <div style={{ padding: '10px 0' }}>
                     Депозит: {this.state.deposit}
                     <br></br>
-                    Объем дерева: {get(this.state, 'rootNodeProps.current_value')}
+                    Объем дерева: {get(this.state, 'rootNode.properties.current_value')} $
                 </div>
                 <div style={{ padding: '10px 0' }}>
-                    Общая доля:
+                    <h3>{get(this.state, 'selectedNode.name')}</h3>
+                    Общая доля: {this.getRound(get(this.state, 'selectedNode.properties.global_perc'))}
                     <br></br>
-                    Доля в род.п.:
+                    Локальная доля: {this.getRound(get(this.state, 'selectedNode.properties.local_perc'))}
                     <br></br>
-                    Day pr {get(this.state, 'selectedNodeProps.day_profit')}
+                    Дневной доход {this.getRound(get(this.state, 'selectedNode.properties.day_profit'))}
                     <br></br>
-                    week pr {get(this.state, 'selectedNodeProps.week_profit')}
+                    Недельный доход {this.getRound(get(this.state, 'selectedNode.properties.week_profit'))}
                     <br></br>
-                    month pr {get(this.state, 'selectedNodeProps.month_profit')}
+                    Месячный доход {this.getRound(get(this.state, 'selectedNode.properties.month_profit'))}
                     <br></br>
                     <br></br>
-                    Объем инвестиций:
+                    Объем инвестиций: {this.getRound(get(this.state, 'selectedNode.properties.current_value'))}
                     <br></br>
                     <br></br>
                     Инструменты:
@@ -57,12 +62,6 @@ class Details extends Component {
                 <div style={{ padding: '10px 0' }}>
                     рекомендации и добавление ноды
                 </div>
-                <pre>
-                    {JSON.stringify({ rootNodeProps: this.state.rootNodeProps }, null, 4)}
-                </pre>
-                <pre>
-                    {JSON.stringify({ selectedNodeProps: this.state.selectedNodeProps }, null, 4)}
-                </pre>
             </div>
         );
     }
