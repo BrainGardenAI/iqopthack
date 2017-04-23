@@ -15,6 +15,10 @@ class Graph {
             body: JSON.stringify(ids),
         });
     }
+
+    static getForDepth(id, depth) {
+        return fetch(`${API_URL}graph/getfordepth/${id}?depth=${depth}`);
+    }
 }
 
 export {

@@ -11,6 +11,8 @@ import Details from './blocks/Details';
 import { HAIKU } from './const';
 
 class App extends Component {
+  loadDepth = 1;
+
   constructor(props) {
     super(props);
 
@@ -22,7 +24,7 @@ class App extends Component {
     this.onNodeClick = this.onNodeClick.bind(this);
     this.onLoadAtNode = this.onLoadAtNode.bind(this);
 
-    this.load();
+    this.loadRoot();
   }
 
   collectIds(node) {
@@ -37,10 +39,19 @@ class App extends Component {
     return ids;
   }
 
-  load() {
+  loadRoot() {
     GraphService.getRoot()
       .then((result) => {
-        let nodeIds = this.collectIds(result);
+        this.loadItems(result)
+          .then((result2) => {
+            this.setState({ graphRoot: result2 });
+          });
+      });
+  }
+
+  loadItems(graph) {
+      return new Promise((resolve, reject) => {
+        let nodeIds = this.collectIds(graph);
 
         GraphService.getItems(nodeIds)
           .then((result2) => {
@@ -58,7 +69,10 @@ class App extends Component {
               });
             });
 
-            this.setState({ graphRoot: this.prepareNode(result, nodesFlatHash) });
+            resolve(this.prepareNode(graph, nodesFlatHash));
+          })
+          .catch((err) => {
+            reject(err);
           });
       });
   }
@@ -85,6 +99,14 @@ class App extends Component {
 
   onLoadAtNode(node) {
     console.log('onLoadAtNode(); node=', node);
+
+    GraphService.getForDepth(node.data.id, this.loadDepth)
+      .then((result) => {
+        this.loadItems(result)
+          .then((result2) => {
+            this.setState({ graphRoot: result2 });
+          });
+      })
   }
 
   get rootNodeProps() {

@@ -29,6 +29,20 @@ class GraphService extends BaseService {
                 });
         });
     }
+
+    static getForDepth(id, depth) {
+        return new Promise((resolve, reject) => {
+            API.Graph.getForDepth(id, depth)
+                .then(this.checkStatus)
+                .then(this.parseJSON)
+                .then((result) => {
+                    resolve(result);
+                })
+                .catch((error) => {
+                    reject(error);
+                })
+        });
+    }
 }
 
 export default GraphService;
