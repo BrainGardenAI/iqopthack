@@ -67,6 +67,7 @@ class App extends Component {
     const { children, id } = { ...node };
 
     return {
+      id,
       name: id,
       children: isArray(children)
         ? map(children, (item, index) => {
@@ -78,7 +79,7 @@ class App extends Component {
   }
 
   onNodeClick(node) {
-    console.log('onNodeClick', { node });
+    console.log('onNodeClick', { node, graphRoot: this.state.graphRoot });
   }
 
   render() {
@@ -90,11 +91,16 @@ class App extends Component {
           </div>
           <div className="app__right">
             <div className="app__half-hight">
+              <div style={{ padding: '5px' }}>
+                <div className="btn-group">
+                  <span className="btn btn-default active">light</span>
+                  <a href="#second-screen" className="btn btn-default">pro</a>
+                </div>
+              </div>
               {HAIKU.SPRING}
             </div>
             <div className="app__half-hight">
               <Details />
-              <p><a href="#second-screen">go down</a></p>
             </div>
           </div>
         </div>
@@ -107,8 +113,12 @@ class App extends Component {
           </div>
           <div className="app__right">
             <div className="app__half-hight">
-              <p><a href="#first-screen">go top</a></p>
-              Account
+              <div style={{ padding: '5px' }}>
+                <div className="btn-group">
+                  <a href="#first-screen" className="btn btn-default">light</a>
+                  <span className="btn btn-default active">pro</span>
+                </div>
+              </div>
             </div>
             <div className="app__half-hight">
               Node info
