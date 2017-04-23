@@ -4,6 +4,8 @@ import ai.braingarden.bonsai.model.graph.PortfolioGraph;
 import ai.braingarden.bonsai.utils.AsyncPersistenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -15,15 +17,18 @@ public class GraphService {
     public static final Logger logger = LoggerFactory.getLogger(GraphService.class);
 
     public static final transient String GRAPH_KEY = "GRAPH";
-    public static final transient String DB_PATH = "graph.store";
 
-    private transient AsyncPersistenceManager<PortfolioGraph> saver =
-            new AsyncPersistenceManager<>(PortfolioGraph.class, DB_PATH);
+    private transient AsyncPersistenceManager<PortfolioGraph> saver;
+
+
+    @Autowired
+    private Environment env;
 
     private volatile PortfolioGraph graph;
 
     @PostConstruct
     public void start() {
+        saver = new AsyncPersistenceManager<>(PortfolioGraph.class, env.getProperty("bonsai.graphstore"));
         saver.start();
 
         loadTree();

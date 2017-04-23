@@ -15,7 +15,7 @@ public class TestGraphStore {
 
     public static void main(String... args) {
 
-        final String host = "http://localhost:8080/";
+        final String host = "http://localhost:8090/";
         RestTemplate rest = new RestTemplate();
 
         //delete root
