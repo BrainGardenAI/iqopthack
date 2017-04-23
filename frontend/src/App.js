@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
 import './css/bootstrap.css';
-import { forEach, forOwn, get, isArray, map, set } from 'lodash';
+import { cloneDeep, forEach, forOwn, get, isArray, isNil, map, set } from 'lodash';
+import * as _ from 'lodash';
 
 import { GraphService } from './services';
 
@@ -12,6 +13,7 @@ import { HAIKU } from './const';
 
 class App extends Component {
   loadDepth = 1;
+  isLoading = false;
 
   constructor(props) {
     super(props);
@@ -40,13 +42,19 @@ class App extends Component {
   }
 
   loadRoot() {
-    GraphService.getRoot()
-      .then((result) => {
-        this.loadItems(result)
-          .then((result2) => {
-            this.setState({ graphRoot: result2 });
-          });
-      });
+    if (this.isLoading === false) {
+      this.isLoading = true;
+
+      GraphService.getRoot()
+        .then((result) => {
+          this.loadItems(result)
+            .then((result2) => {
+              this.setState({ graphRoot: result2 });
+
+              this.isLoading = false;
+            });
+        });
+    }
   }
 
   loadItems(graph) {
@@ -93,20 +101,79 @@ class App extends Component {
     };
   }
 
+  getPath(obj, keyValue, value, path) {
+
+    if(typeof obj !== 'object') {
+        return;
+    }
+
+    for(let key in obj) {
+        if(obj.hasOwnProperty(key)) {
+          let t = path;
+          let v = obj[key];
+          if (!path) {
+            path = key;
+          }
+          else {
+            path = path + '.' + key;
+          }
+          if (v === value) {
+            return path;
+          }
+          else if (typeof v !== 'object'){
+            path = t;
+          }
+          var res = this.getPath(v, keyValue, value, path);
+          if (res) {
+            return res;
+          }
+        }
+    }
+  }
+
   onNodeClick(node) {
     this.setState({ selectedNode: get(node, 'data', null) });
   }
 
   onLoadAtNode(node) {
-    console.log('onLoadAtNode(); node=', node);
+    let nodePath = this.getPath(this.state.graphRoot, 'id', node.data.id).split('.'),
+      fixedPath = [];
 
-    GraphService.getForDepth(node.data.id, this.loadDepth)
-      .then((result) => {
-        this.loadItems(result)
-          .then((result2) => {
-            this.setState({ graphRoot: result2 });
-          });
-      })
+    nodePath.pop();
+
+    forEach(nodePath, (key, index) => {
+      if (/[0-9]+/.test(key)) {
+        if (!/[0-9]+/.test(nodePath[index + 1])) {
+          fixedPath.push(key);
+        }
+      } else {
+        fixedPath.push(key);
+      }
+    });
+
+    if (this.isLoading === false) {
+      this.isLoading = true;
+
+      GraphService.getForDepth(node.data.id, this.loadDepth)
+        .then((result) => {
+          this.loadItems(result)
+            .then((result2) => {
+              this.setState((state) => {
+                let nextState = cloneDeep(state);
+
+                set(nextState.graphRoot, `${fixedPath.join('.')}`, result2);
+
+                // console.log(`${nodePath.join('.')}`);
+                // console.log(`${fixedPath.join('.')}`);
+                // console.info(state, nextState);
+
+                return nextState;
+              });
+
+              this.isLoading = false;
+            });
+        });
+    }
   }
 
   get rootNodeProps() {
@@ -139,6 +206,9 @@ class App extends Component {
                 rootNodeProps={this.rootNodeProps}
                 selectedNodeProps={this.selectedNodeProps}
               />
+              <pre>
+                {JSON.stringify(this.state.graphRoot, null, 4)}
+              </pre>
             </div>
           </div>
         </div>

@@ -38,9 +38,6 @@ class Tree extends Component {
             .attr('transform', `translate(${0}, ${-230})`);
 
         this.treeMap = d3.tree().size([this.width, this.height]);
-
-        this.init();
-        this.update(this.root);
     }
 
     init() {
