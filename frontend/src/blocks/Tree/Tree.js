@@ -29,15 +29,24 @@ class Tree extends Component {
         this.height = this.ref.offsetHeight;
         this.width = this.ref.offsetWidth;
 
+        this.zoomListener = d3.zoom().scaleExtent([0.1, 3]).on("zoom", () => {
+            this.zoom();
+        });
+
         this.svg = d3
             .select(this.ref)
             .append('svg')
-            .attr('width', '100%')
             .attr('height', '100%')
+            .attr('width', '100%')
+            .call(this.zoomListener)
             .append('g')
             .attr('transform', `translate(${0}, ${-230})`);
 
         this.treeMap = d3.tree().size([this.width, this.height]);
+    }
+
+    zoom() {
+        this.svg.attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
     }
 
     init() {
@@ -100,9 +109,11 @@ class Tree extends Component {
                 .attr('class', 'tree__node')
                 .on('dblclick', (d) => {
                     this.toggleNode(d);
+                    d3.event.stopPropagation();
                 })
                 .on('click', (d) => {
                     this.selectNode(d);
+                    d3.event.stopPropagation();
                 });
 
         // add circles

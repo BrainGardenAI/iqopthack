@@ -1,9 +1,13 @@
 import * as API from '../../api';
 import BaseService from '../BaseService';
 
+import fakeRootData from './fake-root.json';
+import fakeItems from './fake-get-items.json';
+
 class GraphService extends BaseService {
     static getRoot() {
         return new Promise((resolve, reject) => {
+            // resolve(fakeRootData);
             API.Graph.getRoot()
                 .then(this.chekcStatus)
                 .then(this.parseJSON)
@@ -18,6 +22,7 @@ class GraphService extends BaseService {
 
     static getItems(ids) {
         return new Promise((resolve, reject) => {
+            // resolve(fakeItems);
             API.Graph.getItems(ids)
                 .then(this.checkStatus)
                 .then(this.parseJSON)
