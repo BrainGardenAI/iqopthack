@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { get } from 'lodash';
+import { forEach, forOwn, get, isArray, isEqual } from 'lodash';
 import * as d3 from 'd3';
 
 import './Tree.css';
@@ -13,83 +13,66 @@ class Tree extends Component {
     svg;
     treeMap;
     root;
+    selectedNode;
     ref;
     i = 0;
-    
-    treeData = {
-        name: 'Top level',
-        properties: {
-            global_perc: 0,
-            parent_perc: 0,
-            current_value: 0,
-            day_profit: 0,
-            week_profit: 0,
-            month_profit: 0,
-        },
-        children: [
-            {
-                name: 'Level 2: A',
-                children: [
-                    {
-                        name: 'Son Level 2: A',
-                        children: [
-                            {
-                                name: 'Son Son Level 2: A',
-                                children: [
-                                    {
-                                        name: 'Son Son Son Level 2: A',
-                                        children: [
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                            {
-                                                name: 'Son Son Son Son Level 2: A',
-                                            },
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        name: 'Daughter Level 2: A'
-                    }
-                ]
-            },
-            {
-                name: 'Level 2: B'
-            }
-        ]
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            treeData: {},
+        };
     }
     
     componentDidMount() {
         this.height = this.ref.offsetHeight;
         this.width = this.ref.offsetWidth;
 
+        this.zoomListener = d3.zoom().scaleExtent([0.1, 3]).on("zoom", () => {
+            this.zoom();
+        });
+
         this.svg = d3
             .select(this.ref)
             .append('svg')
-            .attr('width', '100%')
             .attr('height', '100%')
+            .attr('width', '100%')
+            .call(this.zoomListener)
             .append('g')
             .attr('transform', `translate(${0}, ${-230})`);
 
         this.treeMap = d3.tree().size([this.width, this.height]);
-        
+    }
+
+    zoom() {
+        this.svg.attr("transform", "translate(" + d3.event.transform.x + "," + d3.event.transform.y + ")scale(" + d3.event.transform.k + ")");
+    }
+
+    init() {
         // Assigns parent, children, height, depth
-        this.root = d3.hierarchy(this.treeData, (d) => d.children);
+        this.root = d3.hierarchy(this.state.treeData, (d) => d.children);
         this.root.x0 = 0;
         this.root.y0 = 0;
 
-        this.root.children.forEach((item) => this.collapse(item));
+        if (this.root && this.root.children) {
+            this.root.children.forEach((item) => this.collapse(item));
+        }
+    }
 
-        this.update(this.root);
+    componentWillReceiveProps(nextProps) {
+        if (!isEqual(this.props, nextProps)) {
+            this.setState({
+                treeData: get(nextProps, 'treeData', {}),
+            }, () => {
+                this.init();
+                this.update(this.root);
+
+                if (!this.selectedNode) {
+                    this.selectNode(this.root);
+                }
+            });
+        }
     }
     
     collapse(d) {
@@ -100,13 +83,20 @@ class Tree extends Component {
         }
     }
 
+    getCircleClass(d) {
+        return (d._selected
+            ? ['tree__circle', 'tree__circle_selected']
+            : ['tree__circle'])
+                .join(' ');
+    }
+
     update(source) {
         const treeData = this.treeMap(this.root);
 
         let nodes = treeData.descendants(),
             links = treeData.descendants().slice(1);
 
-        nodes.forEach((d) => { d.y = this.width - d.depth * 80 });
+        nodes.forEach((d) => { d.y = this.width - d.depth * 120 });
 
         /******* Nodes section *******/
         let node = this.svg.selectAll('g.tree__node')
@@ -117,20 +107,26 @@ class Tree extends Component {
                 .append('g')
                 .attr('transform', (d) => `translate(${source.x0},${source.y0})`)
                 .attr('class', 'tree__node')
+                .on('dblclick', (d) => {
+                    this.toggleNode(d);
+                    d3.event.stopPropagation();
+                })
                 .on('click', (d) => {
-                    this.click(d);
+                    this.selectNode(d);
+                    d3.event.stopPropagation();
                 });
 
         // add circles
         nodeEnter
             .append('circle')
-            .attr('class', 'tree__circle')
+            .attr('class', (d) => this.getCircleClass(d))
             .attr('r', 1e-6)
             .style('fill', (d) => d._children ? 'lightsteelblue' : '#fff');
 
         // add labels
         nodeEnter
             .append('text')
+            .attr('class', 'tree__text')
             .attr('dy', '.35em')
             .attr('x', (d) => d.children || d._children ? -13 : 13)
             .attr('text-anchor', (d) => d.children || d._children ? 'end' : 'start')
@@ -145,8 +141,10 @@ class Tree extends Component {
 
         nodeUpdate
             .select('.tree__circle')
+            .attr('class', null)
+            .attr('class', (d) => this.getCircleClass(d))
             .attr('r', 10)
-            .style('fill', (d) => d._children ? 'lightsteelblue' : '#fff')
+            .style('fill', (d) => get(d, 'data.leaf') ? '#fff' : 'lightsteelblue')
             .attr('cursor', 'pointer');
 
         let nodeExit = node
@@ -206,7 +204,7 @@ class Tree extends Component {
               ${d.x} ${d.y}`;
     }
 
-    click(d) {
+    toggleNode(d) {
         if (d.children) {
             d._children = d.children;
             d.children = null;
@@ -214,7 +212,41 @@ class Tree extends Component {
         else {
             d.children = d._children;
             d._children = null;
+
+            if ((!d.children || d.children.length === 0) && d.data.leaf === false) {
+                if (this.props.onLoadAtNode && typeof this.props.onLoadAtNode === 'function') {
+                    this.props.onLoadAtNode(d);
+                }
+            }
         }
+
+        this.update(d);
+    }
+
+    deselectOtherNodes(current, selected) {
+        let children = current.children || current._children;
+
+        current._selected = get(current, 'data.id') === get(selected, 'data.id');
+
+        if (isArray(children)) {
+            forEach(children, (item) => {
+                this.deselectOtherNodes(item, selected);
+            })
+        }
+    }
+
+    selectNode(d) {
+        if (!d._selected) {
+            d._selected = true;
+
+            if (this.props.onNodeClick && typeof this.props.onNodeClick === 'function') {
+                this.props.onNodeClick(d);
+            }
+
+            this.selectedNode = d;
+        }
+
+        this.deselectOtherNodes(this.treeMap(this.root), d);
 
         this.update(d);
     }
