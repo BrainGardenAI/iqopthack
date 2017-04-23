@@ -42,9 +42,9 @@ class Details extends Component {
                 </div>
                 <div style={{ padding: '10px 0' }}>
                     <h3>{get(this.state, 'selectedNode.name')}</h3>
-                    Общая доля: {this.getRound(get(this.state, 'selectedNode.properties.global_perc'))}
+                    Общая доля: {this.getRound(get(this.state, 'selectedNode.properties.global_perc', 0) * 100)} %
                     <br></br>
-                    Локальная доля: {this.getRound(get(this.state, 'selectedNode.properties.local_perc'))}
+                    Локальная доля: {this.getRound(get(this.state, 'selectedNode.properties.local_perc', 0) * 100)} %
                     <br></br>
                     Дневной доход {this.getRound(get(this.state, 'selectedNode.properties.day_profit'))}
                     <br></br>

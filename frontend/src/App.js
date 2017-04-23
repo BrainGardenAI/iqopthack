@@ -303,7 +303,7 @@ class App extends Component {
           <div className="app__left">
             <img
               src={this.getSeasonSvg(get(this.rootNode, 'properties.day_profit'))}
-              style={{ position: 'absolute', zIndex: '1' }}
+              style={{ position: 'absolute', zIndex: '1', width: '70%', top: '10%' }}
             />
           </div>
           <div className="app__right" style={{ zIndex: '2' }}>
@@ -321,9 +321,9 @@ class App extends Component {
                   </div>
                   <div style={{ padding: '10px 0' }}>
                       <h3>{get(this.state, 'selectedNode.name')}</h3>
-                      Общая доля: {this.getRound(get(this.state, 'graphRoot.properties.global_perc'))}
+                      Общая доля: {this.getRound(get(this.state, 'graphRoot.properties.global_perc', 0) * 100)} %
                       <br></br>
-                      Локальная доля: {this.getRound(get(this.state, 'graphRoot.properties.local_perc'))}
+                      Локальная доля: {this.getRound(get(this.state, 'graphRoot.properties.local_perc', 0) * 100)} %
                       <br></br>
                       Дневной доход {this.getRound(get(this.state, 'graphRoot.properties.day_profit'))}
                       <br></br>
