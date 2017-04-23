@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import './App.css';
 import './css/bootstrap.css';
-import { cloneDeep, forEach, forOwn, get, isArray, isNil, map, set } from 'lodash';
-import * as _ from 'lodash';
+import { cloneDeep, forEach, forOwn, get, isArray, isNil, map, set, round } from 'lodash';
 
-import { GraphService } from './services';
+import '../public/tree.js';
+
+import { GraphService, PortfolioService } from './services';
 
 import * as SVG from './svg';
 
@@ -23,10 +24,12 @@ class App extends Component {
     this.state = {
       graphRoot: {},
       selectedNode: null,
+      isLoading: false,
     };
 
     this.onNodeClick = this.onNodeClick.bind(this);
     this.onLoadAtNode = this.onLoadAtNode.bind(this);
+    this.onClickButton = this.onClickButton.bind(this);
 
     this.loadRoot();
   }
@@ -133,6 +136,63 @@ class App extends Component {
     }
   }
 
+  doit() {
+      // exlint-disable
+      console.log('drawing');
+      var canvas = document.getElementById("canvas");
+      canvas.height = 700;
+      canvas.width  = 600;
+      var ctx = canvas.getContext("2d");
+      window.tree.canvas = canvas;
+      window.tree.ctx = ctx;
+      var counter = 0;
+      setInterval(function() {
+          counter++;
+
+          window.tree.angleRandomVal =
+              Math.PI / 32 * Math.sin(Math.PI / 32 * counter) +
+              Math.PI / 64 * Math.cos(Math.PI / 32 * counter) +
+              Math.PI / 64 * Math.sin(Math.PI / 128 * counter);
+          var length = Math.min(60, 5 + counter*0.2);
+
+          window.tree.drawTree(
+              { x: canvas.width / 2, y: canvas.height },  //start point
+              { x: 0, y: length },
+              8
+          )
+
+      }, 80);
+      // exlint-enable
+  }
+
+  onClickButton() {
+    this.setState({ isLoading: true });
+
+    this.createScreen.remove();
+    this.doit();
+    PortfolioService.create()
+      .then((result) => {
+        let intervale = setInterval(() => {
+          console.info('check computed');
+
+          PortfolioService.computed()
+            .then((response) => {
+              if (response === true) {
+                console.info('successful computed');
+
+                clearInterval(intervale);
+                intervale = null;
+                this.setState({ isLoading: false });
+                this.loadingScreen.remove();
+              }
+            });
+        }, 4000);
+      })
+      .catch((err) => {
+
+      });
+  }
+
   onNodeClick(node) {
     this.setState({ selectedNode: get(node, 'data', null) });
   }
@@ -200,9 +260,45 @@ class App extends Component {
     return get(this.state, 'selectedNode', this.rootNode);
   }
 
+  getRound(number) {
+      return round(number, 2);
+  }
+
+  get upRoDown() {
+    return get(this.state, 'graphRoot.properties.day_profit') < (1 / 256)
+      ? SVG.RiskDown
+      : SVG.Riskup;
+  }
+
   render() {
     return (
       <div className="app">
+        <div className="app__row" ref={ref => this.createScreen = ref}>
+            <img
+              src={SVG.Main}
+              style={{height: '95%', width: 'auto', display: 'block', margin: 'auto' }}
+            />
+            {this.state.isLoading}
+            <button type="button" onClick={this.onClickButton} disabled={this.state.isLoading}>
+              <img
+                src={SVG.Button}
+                style={{ position: 'absolute', right: '10%', bottom: '10%', margin: 'auto', width: '250px' }}
+              />
+            </button>
+        </div>
+        <div id="loading" className="app__row" ref={ref => this.loadingScreen = ref}>
+          <div style={{height: '700px', margin: '30px auto'}}>
+            <h3
+              style={{
+                fontFamily: '“HelveticaNeue-Light”, “Helvetica Neue Light”, “Helvetica Neue”, Helvetica, Arial, “Lucida Grande”, sans-serif',
+                letterSpacing: '20px',
+                fontWeight: '100',
+                textTransform: 'uppercase',
+              }}
+            >построение инвестиционного портфеля</h3>
+            <canvas id="canvas" style={{ display: 'block', margin: 'auto' }}></canvas>
+          </div>
+        </div>
         <div id="first-screen" className="app__row" style={{ position: 'relative' }}>
           <div className="app__left">
             <img
@@ -218,10 +314,30 @@ class App extends Component {
                   <a href="#second-screen" className="btn btn-default">pro</a>
                 </div>
               </div>
-              123
+              <div style={{ padding: '20px', backgroundColor: 'rgba(255, 255, 255, 0.6)' }}>
+                  <div style={{ padding: '10px 0' }}>
+                      <br></br>
+                      Объем дерева: {get(this.state, 'graphRoot.properties.current_value')} $
+                  </div>
+                  <div style={{ padding: '10px 0' }}>
+                      <h3>{get(this.state, 'selectedNode.name')}</h3>
+                      Общая доля: {this.getRound(get(this.state, 'graphRoot.properties.global_perc'))}
+                      <br></br>
+                      Локальная доля: {this.getRound(get(this.state, 'graphRoot.properties.local_perc'))}
+                      <br></br>
+                      Дневной доход {this.getRound(get(this.state, 'graphRoot.properties.day_profit'))}
+                      <br></br>
+                      Недельный доход {this.getRound(get(this.state, 'graphRoot.properties.week_profit'))}
+                      <br></br>
+                      Месячный доход {this.getRound(get(this.state, 'graphRoot.properties.month_profit'))}
+                      <br></br>
+                      <br></br>
+                      Объем инвестиций: {this.getRound(get(this.state, 'graphRoot.properties.current_value'))}
+                  </div>
+              </div>
             </div>
             <div className="app__half-hight">
-              321
+              <img src={this.upRoDown} style={{ cursor: 'pointer' }} />
             </div>
           </div>
         </div>

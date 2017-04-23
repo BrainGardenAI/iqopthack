@@ -35,9 +35,8 @@ class Details extends Component {
 
     render() {
         return (
-            <div style={{ padding: '0 10px' }}>
+            <div style={{ padding: '20px', backgroundColor: 'rgba(255, 255, 255, 0.6)' }}>
                 <div style={{ padding: '10px 0' }}>
-                    Депозит: {this.state.deposit}
                     <br></br>
                     Объем дерева: {get(this.state, 'rootNode.properties.current_value')} $
                 </div>
@@ -55,12 +54,6 @@ class Details extends Component {
                     <br></br>
                     <br></br>
                     Объем инвестиций: {this.getRound(get(this.state, 'selectedNode.properties.current_value'))}
-                    <br></br>
-                    <br></br>
-                    Инструменты:
-                </div>
-                <div style={{ padding: '10px 0' }}>
-                    рекомендации и добавление ноды
                 </div>
             </div>
         );

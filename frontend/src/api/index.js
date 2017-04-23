@@ -21,6 +21,23 @@ class Graph {
     }
 }
 
+class Portfolio {
+    static create() {
+        return fetch(`${API_URL}portfolio/create?money=${100000}&risk=${1}`, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+    }
+
+    static computed() {
+        return fetch(`${API_URL}portfolio/computed`);
+    }
+}
+
 export {
     Graph,
+    Portfolio,
 }
